@@ -1,0 +1,37 @@
+{
+  "contact": {
+    "email": "info@candorfiction.com",
+    "phone": "+1 (864) 649-0307"
+  },
+  "socialMedia": [
+    {
+      "icon": "instagram",
+      "href": "https://instagram.com/candor_fiction",
+      "label": "Instagram"
+    },
+    {
+      "icon": "youtube",
+      "href": "https://www.youtube.com/@CandorFiction",
+      "label": "YouTube"
+    },
+    {
+      "icon": "facebook",
+      "href": "https://www.facebook.com/profile.php?id=61567671081284",
+      "label": "Facebook"
+    }
+  ],
+  "company": {
+    "name": "Candor Fiction",
+    "tagline": "It's All About the Story",
+    "copyrightYear": 2025,
+    "foundedYear": 2023
+  },
+  "legal": {
+    "privacyPolicy": {
+      "lastUpdated": "2025-09-06"
+    },
+    "termsAndConditions": {
+      "lastUpdated": "2025-09-06"
+    }
+  }
+}

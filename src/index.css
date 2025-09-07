@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+
+@layer theme {
+  :root {
+    --primary-color: #1a1a2e;
+    --secondary-color: #16213e;
+    --accent-color: #e94560;
+    --text-light: #f8f9fa;
+    --text-dark: #212529;
+    --background-light: #ffffff;
+    --background-dark: #0f0f23;
+  }
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  button,
+  a {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-8 py-4 bg-[var(--accent-color)] text-white rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105;
+  }
+
+  .btn-secondary {
+    @apply px-8 py-4 border-2 border-[var(--accent-color)] text-[var(--accent-color)] rounded-lg font-semibold transition-all duration-300 hover:bg-[var(--accent-color)] hover:text-white;
+  }
+
+  .section-padding {
+    @apply px-4 md:px-8 lg:px-12;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(
+      135deg,
+      var(--primary-color) 0%,
+      var(--secondary-color) 100%
+    );
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, var(--accent-color), #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

@@ -1,0 +1,12 @@
+.logo {
+  background-image: url(/candorfiction-logo-black.png);
+  height: 56px;
+  width: 170px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  cursor: pointer;
+
+  span {
+    display: none;
+  }
+}
