@@ -33,7 +33,8 @@ jobs:
         run: npm run build
 
       - name: Deploy to Cloudflare Workers (Staging)
-        if: github.event_name == 'pull_request'
+        # if: github.event_name == 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
