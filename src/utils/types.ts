@@ -3,7 +3,9 @@
  */
 
 export interface Env {
-  ASSETS: any;
+  ASSETS: {
+    fetch: (request: RequestInfo, init?: RequestInit) => Promise<Response>;
+  };
   ENVIRONMENT: string;
   BREVO_API_KEY: string;
   BREVO_FROM_EMAIL: string;
