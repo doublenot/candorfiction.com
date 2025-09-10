@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["src/worker.ts"],
+  "exclude": [
+    "src/**/*.tsx",
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/components/**/*",
+    "src/pages/**/*"
+  ]
+}

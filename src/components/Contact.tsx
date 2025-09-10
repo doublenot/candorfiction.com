@@ -1,6 +1,7 @@
 import React from 'react';
 import siteConfig from '../config/siteConfig.json';
 import type { SiteConfig } from '../config/types';
+import { prepareSecureFormData } from '../utils/clientSecurity';
 
 const config: SiteConfig = siteConfig as SiteConfig;
 
@@ -21,13 +22,51 @@ const Contact: React.FC = () => {
     });
 
     const [isSubmitted, setIsSubmitted] = React.useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+    const [submitMessage, setSubmitMessage] = React.useState<string>('');
+    const [submitError, setSubmitError] = React.useState<string>('');
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      // Simulate form submission
-      setIsSubmitted(true);
-      setTimeout(() => setIsSubmitted(false), 3000);
-      setFormData({ name: '', email: '', service: '', message: '' });
+      setIsSubmitting(true);
+      setSubmitError('');
+      setSubmitMessage('');
+
+      try {
+        // Prepare secure form data with HMAC signature
+        const secureFormData = await prepareSecureFormData(formData);
+
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(secureFormData),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setIsSubmitted(true);
+          setSubmitMessage(result.message);
+          setFormData({ name: '', email: '', service: '', message: '' });
+          setTimeout(() => {
+            setIsSubmitted(false);
+            setSubmitMessage('');
+          }, 5000);
+        } else {
+          setSubmitError(
+            result.error || 'There was an error sending your message.'
+          );
+        }
+      } catch (error) {
+        console.error('Form submission error:', error);
+        setSubmitError(
+          'There was an error sending your message. Please try again.'
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
     };
 
     const handleChange = (
@@ -126,13 +165,25 @@ const Contact: React.FC = () => {
                   />
                 </div>
 
-                <button type="submit" className="btn-primary w-full">
-                  Send Message
+                <button
+                  type="submit"
+                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </button>
 
-                {isSubmitted && (
+                {/* Success Message */}
+                {isSubmitted && submitMessage && (
                   <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                    Thank you! We'll get back to you soon.
+                    {submitMessage}
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    {submitError}
                   </div>
                 )}
               </form>

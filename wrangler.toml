@@ -1,0 +1,24 @@
+name = "candorfiction-website"
+main = "src/worker.ts"
+compatibility_date = "2024-12-04"
+
+[vars]
+ENVIRONMENT = "production"
+
+# Static assets configuration
+[assets]
+directory = "./dist"
+
+# Environment for different stages
+[env.staging]
+name = "candorfiction-staging"
+vars = { ENVIRONMENT = "staging" }
+workers_dev = true
+routes = [
+  { pattern = "staging.candorfiction.com", zone_name = "candorfiction.com", custom_domain = true },
+]
+
+[env.production]
+name = "candorfiction-production"
+vars = { ENVIRONMENT = "production" }
+workers_dev = true
