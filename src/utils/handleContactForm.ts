@@ -1,4 +1,4 @@
-import { sendEmailViaBrevo } from './sendEmailViaBrevo';
+import { sendEmail } from './sendEmail';
 import { verifyHMAC, isValidTimestamp, isValidOrigin } from './security';
 import type { Env, ContactFormData, SecureContactFormData } from './types';
 
@@ -188,16 +188,16 @@ export async function handleContactForm(
       environment: env.ENVIRONMENT,
     });
 
-    // Send email via Brevo API
+    // Send email via configured email service (Brevo first, then Resend fallback)
     try {
-      const emailSent = await sendEmailViaBrevo(formData, env);
+      const emailSent = await sendEmail(formData, env);
 
       if (!emailSent) {
-        console.error('Failed to send email via Brevo');
+        console.error('Failed to send email via any configured service');
         // Continue anyway - we don't want to fail the form submission if email fails
       }
     } catch (emailError) {
-      console.error('Brevo email error:', emailError);
+      console.error('Email service error:', emailError);
       // Continue anyway - we don't want to fail the form submission if email fails
     }
 

@@ -7,9 +7,10 @@ export interface Env {
     fetch: (request: RequestInfo, init?: RequestInit) => Promise<Response>;
   };
   ENVIRONMENT: string;
-  BREVO_API_KEY: string;
-  BREVO_FROM_EMAIL: string;
-  BREVO_TO_EMAIL: string;
+  BREVO_API_KEY?: string;
+  RESEND_API_KEY?: string;
+  FROM_EMAIL: string; // Sender email address (used by all email services)
+  TO_EMAIL: string; // Business email address (used by all email services)
   CONTACT_FORM_SECRET: string; // Secret for HMAC verification
 }
 

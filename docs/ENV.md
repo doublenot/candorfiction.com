@@ -29,35 +29,46 @@ Environment variables are configured in the `wrangler.toml` file and passed to t
 - **Usage**: Serves built React application files, CSS, JS, images, and other static content
 - **Configured in**: Automatically bound by Cloudflare Workers based on `[assets]` configuration
 
-### Email Integration (Brevo API)
+### Email Integration
 
-#### `BREVO_API_KEY`
+The contact form supports two email services with automatic fallback. **Brevo is checked first**, and if not configured, the system falls back to **Resend**. Both services use the same shared email configuration.
+
+#### `BREVO_API_KEY` (Optional)
 
 - **Type**: `string`
-- **Required**: Yes (for email functionality)
+- **Required**: No (but recommended for primary email service)
 - **Description**: API key for Brevo (formerly Sendinblue) email service
 - **Usage**: Authenticates requests to Brevo API for sending emails
 - **Security**: Sensitive - store as encrypted secret in Cloudflare dashboard
 - **Example**: `"xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"`
 
-#### `BREVO_FROM_EMAIL`
+#### `RESEND_API_KEY` (Optional)
+
+- **Type**: `string`
+- **Required**: No (fallback email service)
+- **Description**: API key for Resend email service
+- **Usage**: Authenticates requests to Resend API for sending emails (used if Brevo is not configured)
+- **Security**: Sensitive - store as encrypted secret in Cloudflare dashboard
+- **Example**: `"re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"`
+
+#### `FROM_EMAIL` (Required)
 
 - **Type**: `string` (email address)
-- **Required**: Yes (for email functionality)
-- **Description**: The "from" email address for outgoing emails
+- **Required**: Yes (for any email functionality)
+- **Description**: The "from" email address for outgoing emails (used by both Brevo and Resend)
 - **Usage**:
   - Business notification emails (from website to business)
   - Customer confirmation emails (from business to customer)
-- **Requirements**: Must be a verified sender in your Brevo account
+- **Requirements**: Must be a verified sender in your chosen email service account
 - **Example**: `"noreply@candorfiction.com"`
 
-#### `BREVO_TO_EMAIL`
+#### `TO_EMAIL` (Required)
 
 - **Type**: `string` (email address)
-- **Required**: Yes (for email functionality)
+- **Required**: Yes (for any email functionality)
 - **Description**: The business email address to receive contact form submissions
 - **Usage**: Receives notification emails when users submit the contact form
-- **Example**: `"contact@candorfiction.com"`
+- **Example**: `"info@candorfiction.com"`
 
 ### Security Variables
 
@@ -100,25 +111,33 @@ vars = { ENVIRONMENT = "production" }
 
 ### Setting Sensitive Variables
 
-For security reasons, sensitive variables like `BREVO_API_KEY`, `BREVO_FROM_EMAIL`, `BREVO_TO_EMAIL`, and `CONTACT_FORM_SECRET` should be set as encrypted secrets rather than plain text in `wrangler.toml`.
+For security reasons, sensitive variables like API keys and email addresses should be set as encrypted secrets rather than plain text in `wrangler.toml`.
 
-#### Using Wrangler CLI:
+#### Using Wrangler CLI
 
 ```bash
 # Set secrets for production
-wrangler secret put BREVO_API_KEY --env production
-wrangler secret put BREVO_FROM_EMAIL --env production
-wrangler secret put BREVO_TO_EMAIL --env production
+
+# Email configuration (always required)
+wrangler secret put FROM_EMAIL --env production
+wrangler secret put TO_EMAIL --env production
+
+# Email service API keys (choose one or both)
+wrangler secret put BREVO_API_KEY --env production    # Primary service
+wrangler secret put RESEND_API_KEY --env production   # Fallback service
+
+# Security secret (always required)
 wrangler secret put CONTACT_FORM_SECRET --env production
 
 # Set secrets for staging
+wrangler secret put FROM_EMAIL --env staging
+wrangler secret put TO_EMAIL --env staging
 wrangler secret put BREVO_API_KEY --env staging
-wrangler secret put BREVO_FROM_EMAIL --env staging
-wrangler secret put BREVO_TO_EMAIL --env staging
+wrangler secret put RESEND_API_KEY --env staging
 wrangler secret put CONTACT_FORM_SECRET --env staging
 ```
 
-#### Using Cloudflare Dashboard:
+#### Using Cloudflare Dashboard
 
 1. Go to Workers & Pages → Your Worker → Settings
 2. Navigate to "Variables and Secrets"
@@ -177,18 +196,31 @@ wrangler deploy --env production
 
 ## 📧 Email Functionality
 
-The contact form requires all three Brevo variables to function:
+The contact form supports **dual email service configuration** with automatic failover using shared email addresses:
 
-1. **`BREVO_API_KEY`**: Authenticates with Brevo API
-2. **`BREVO_FROM_EMAIL`**: Sender address for both notification and confirmation emails
-3. **`BREVO_TO_EMAIL`**: Business email that receives contact form submissions
+1. **Primary Service**: Brevo (checked first)
+2. **Fallback Service**: Resend (used if Brevo is not configured or fails)
 
-### Email Flow:
+### Email Service Priority
+
+The system checks email services in this order:
+
+1. **Brevo** - If `BREVO_API_KEY` is configured (uses shared `FROM_EMAIL` and `TO_EMAIL`)
+2. **Resend** - If Brevo is not configured or fails, and `RESEND_API_KEY` is configured (uses shared `FROM_EMAIL` and `TO_EMAIL`)
+
+### Configuration Options
+
+- **Brevo Only**: Configure `BREVO_API_KEY` + shared email addresses
+- **Resend Only**: Configure `RESEND_API_KEY` + shared email addresses
+- **Both Services**: Configure both API keys for automatic failover (Brevo → Resend)
+- **No Email**: Contact form will work but no emails will be sent (not recommended)
+
+### Email Flow
 
 1. User submits contact form
-2. System sends notification email to `BREVO_TO_EMAIL` (business)
+2. System sends notification email to business (`TO_EMAIL`)
 3. System sends confirmation email to user's email address
-4. Both emails are sent from `BREVO_FROM_EMAIL`
+4. Both emails are sent from the configured sender address (`FROM_EMAIL`)
 
 ## 🔍 Usage in Code
 
@@ -200,18 +232,22 @@ Environment variables are typed in `src/utils/types.ts`:
 export interface Env {
   ASSETS: any; // Cloudflare Assets binding
   ENVIRONMENT: string; // Deployment environment
-  BREVO_API_KEY: string; // Brevo API authentication
-  BREVO_FROM_EMAIL: string; // Email sender address
-  BREVO_TO_EMAIL: string; // Business notification email
-  CONTACT_FORM_SECRET: string; // Security secret for HMAC verification
+  BREVO_API_KEY?: string; // Brevo API authentication (optional)
+  RESEND_API_KEY?: string; // Resend API authentication (optional)
+  FROM_EMAIL: string; // Sender email address (used by all email services)
+  TO_EMAIL: string; // Business email address (used by all email services)
+  CONTACT_FORM_SECRET: string; // Security secret for HMAC verification (required)
 }
 ```
 
 ### Function Usage
 
 - **`src/worker.ts`**: Uses `ASSETS` for static file serving and `ENVIRONMENT` for logging
-- **`src/utils/handleContactForm.ts`**: Uses `ENVIRONMENT` for logging and `CONTACT_FORM_SECRET` for HMAC verification
-- **`src/utils/sendEmailViaBrevo.ts`**: Uses all three Brevo variables for email functionality
+- **`src/utils/handleContactForm.ts`**: Uses `ENVIRONMENT` for logging, `CONTACT_FORM_SECRET` for HMAC verification, and calls unified email service
+- **`src/utils/sendEmail.ts`**: Manages email service selection (Brevo first, Resend fallback) using shared email addresses
+- **`src/utils/sendEmailViaBrevo.ts`**: Uses `BREVO_API_KEY` for authentication and shared `FROM_EMAIL`/`TO_EMAIL` for email functionality
+- **`src/utils/sendEmailViaResend.ts`**: Uses `RESEND_API_KEY` for authentication and shared `FROM_EMAIL`/`TO_EMAIL` for email functionality
+- **`src/utils/emailTemplates.ts`**: Provides shared email templates for both services
 - **`src/utils/security.ts`**: Uses `CONTACT_FORM_SECRET` for server-side HMAC validation and origin checking
 
 ## ✅ Validation
@@ -219,11 +255,30 @@ export interface Env {
 The system includes validation for missing environment variables:
 
 ```typescript
-// Email functionality gracefully degrades if Brevo vars are missing
-if (!env.BREVO_API_KEY || !env.BREVO_FROM_EMAIL || !env.BREVO_TO_EMAIL) {
-  console.warn('Brevo configuration missing - email not sent');
+// Email configuration validation
+if (!env.FROM_EMAIL || !env.TO_EMAIL) {
+  console.warn(
+    'Email configuration missing - FROM_EMAIL and TO_EMAIL are required'
+  );
   return false;
 }
+
+// Email service selection - Brevo checked first
+if (env.BREVO_API_KEY) {
+  console.log('Using Brevo email service');
+  // ... attempt Brevo email
+}
+
+// Resend fallback
+if (env.RESEND_API_KEY) {
+  console.log('Using Resend email service');
+  // ... attempt Resend email
+}
+
+// No email service configured
+console.warn(
+  'No email service configured - neither Brevo nor Resend credentials found'
+);
 
 // Contact form security validation
 if (!env.CONTACT_FORM_SECRET) {
