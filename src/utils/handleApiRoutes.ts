@@ -1,4 +1,5 @@
 import { handleContactForm } from './handleContactForm';
+import { handleImagesApi } from './handleImagesApi';
 import { isValidOrigin } from './security';
 import type { Env } from './types';
 
@@ -21,7 +22,7 @@ export async function handleApiRoutes(
         status: 200,
         headers: {
           'Access-Control-Allow-Origin': origin,
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'Access-Control-Max-Age': '86400',
           Vary: 'Origin',
@@ -40,6 +41,10 @@ export async function handleApiRoutes(
 
   if (pathname === '/api/contact' && request.method === 'POST') {
     return handleContactForm(request, env);
+  }
+
+  if (pathname === '/api/images' && request.method === 'GET') {
+    return handleImagesApi(request, env);
   }
 
   return new Response(

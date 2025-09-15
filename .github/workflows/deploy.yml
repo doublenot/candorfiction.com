@@ -46,7 +46,6 @@ jobs:
 
       - name: Deploy to Cloudflare Workers (Staging)
         if: github.event_name == 'pull_request' || github.event.inputs.name == 'staging'
-        # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
