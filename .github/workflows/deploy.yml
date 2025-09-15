@@ -10,6 +10,13 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      name:
+        type: choice
+        description: Environment
+        options:
+          - staging
+          - production
 
 jobs:
   deploy:
@@ -38,7 +45,7 @@ jobs:
           VITE_CONTACT_FORM_SECRET: ${{ secrets.VITE_CONTACT_FORM_SECRET }}
 
       - name: Deploy to Cloudflare Workers (Staging)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event.inputs.name == 'staging'
         # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: cloudflare/wrangler-action@v3
         with:
@@ -46,7 +53,7 @@ jobs:
           environment: 'staging'
 
       - name: Deploy to Cloudflare Workers (Production)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.inputs.name == 'production'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
