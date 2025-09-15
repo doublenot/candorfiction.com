@@ -24,4 +24,5 @@ vars = { ENVIRONMENT = "production" }
 workers_dev = true
 routes = [
   { pattern = "www.candorfiction.com", zone_name = "candorfiction.com", custom_domain = true },
+  { pattern = "candorfiction.com", zone_name = "candorfiction.com", custom_domain = true },
 ]
