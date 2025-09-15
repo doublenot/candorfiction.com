@@ -10,6 +10,20 @@
     --background-light: #ffffff;
     --background-dark: #0f0f23;
   }
+
+  /* :email {
+    --primary: #045043;
+    --text: #0b0705;
+    --muted: #959593;
+    --subtle: #959593;
+    --light: #c4c5c7;
+    --background: #fffeff;
+    --lightBackground: #f8f9fa;
+    --tableHeader: #f9f9f9;
+    --border: #959593;
+    --divider: #959593;
+    --white: #fffeff;
+  } */
 }
 
 @layer base {
