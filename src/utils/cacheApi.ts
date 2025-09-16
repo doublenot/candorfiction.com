@@ -15,12 +15,51 @@ export interface CacheOptions {
 }
 
 /**
+ * Cloudflare Workers Cache interface
+ */
+interface CloudflareCache {
+  match(request: Request): Promise<Response | undefined>;
+  put(request: Request, response: Response): Promise<void>;
+  delete(request: Request): Promise<boolean>;
+}
+
+/**
+ * Cloudflare Workers global interface
+ */
+interface CloudflareGlobal {
+  caches: {
+    default: CloudflareCache;
+  };
+}
+
+/**
  * Cache API wrapper for Cloudflare Workers
  */
 export class CloudflareCacheAPI {
-  private getCache() {
-    // Handle both Cloudflare Workers and other environments
-    return (globalThis as any).caches?.default || caches;
+  private getCache(): CloudflareCache {
+    // Check if we're in Cloudflare Workers environment
+    if ('caches' in globalThis) {
+      const cfGlobal = globalThis as unknown as CloudflareGlobal;
+      if (cfGlobal.caches?.default) {
+        return cfGlobal.caches.default;
+      }
+    }
+
+    // Fallback for other environments (development, testing)
+    // Create a mock cache that logs operations but doesn't actually cache
+    return {
+      async match(): Promise<Response | undefined> {
+        console.log('Cache API: Mock environment - cache miss');
+        return undefined;
+      },
+      async put(): Promise<void> {
+        console.log('Cache API: Mock environment - cache put (no-op)');
+      },
+      async delete(): Promise<boolean> {
+        console.log('Cache API: Mock environment - cache delete (no-op)');
+        return true;
+      },
+    };
   }
 
   /**
