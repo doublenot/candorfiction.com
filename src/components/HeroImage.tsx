@@ -116,7 +116,7 @@ const HeroImage: React.FC = () => {
       <div className="absolute -bottom-6 -left-6 bg-white text-[var(--text-dark)] p-6 rounded-xl shadow-xl">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 bg-[var(--accent-color)] rounded-lg flex items-center justify-center">
-            <div className="text-xl text-white icon-camera"></div>
+            <div className="icon-camera text-xl text-white"></div>
           </div>
           <div>
             <h3 className="font-semibold">Professional</h3>
