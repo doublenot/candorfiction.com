@@ -12,6 +12,7 @@ export interface Env {
   FROM_EMAIL: string; // Sender email address (used by all email services)
   TO_EMAIL: string; // Business email address (used by all email services)
   CONTACT_FORM_SECRET: string; // Secret for HMAC verification
+  INSTAGRAM_ACCESS_TOKEN?: string; // Instagram API access token
 }
 
 export interface ContactFormData {

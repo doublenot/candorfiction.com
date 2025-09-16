@@ -1,4 +1,29 @@
 {
+  "navigation": {
+    "menuItems": [
+      {
+        "label": "Home",
+        "target": "home",
+        "type": "scroll"
+      },
+      {
+        "label": "Services",
+        "target": "services",
+        "type": "scroll"
+      },
+      {
+        "label": "About",
+        "target": "about",
+        "type": "scroll"
+      },
+      {
+        "label": "Contact",
+        "target": "contact",
+        "type": "scroll",
+        "isPrimary": true
+      }
+    ]
+  },
   "contact": {
     "email": "info@candorfiction.com",
     "phone": "+1 (864) 649-0307"
@@ -33,5 +58,31 @@
     "termsAndConditions": {
       "lastUpdated": "2025-09-06"
     }
+  },
+  "gallery": {
+    "instagram": {
+      "enabled": true,
+      "username": "candor_fiction",
+      "maxImages": 6,
+      "refreshInterval": 3600000
+    },
+    "fallbackImages": [
+      {
+        "src": "https://images.unsplash.com/photo-1516996087931-5ae405802f9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "alt": "Creative storytelling and photography"
+      },
+      {
+        "src": "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "alt": "Professional photography equipment"
+      },
+      {
+        "src": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "alt": "Artistic composition and lighting"
+      },
+      {
+        "src": "https://images.unsplash.com/photo-1551801841-ecad875a5142?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "alt": "Creative writing and storytelling"
+      }
+    ]
   }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import siteConfig from '../config/siteConfig.json';
-import type { SiteConfig } from '../config/types';
+import type { SiteConfig, MenuItem } from '../config/types';
 
 const config: SiteConfig = siteConfig as SiteConfig;
 
@@ -31,6 +31,15 @@ const Header: React.FC = () => {
     }
   };
 
+  const handleMenuClick = (item: MenuItem) => {
+    if (item.type === 'scroll') {
+      scrollToSection(item.target);
+    } else if (item.type === 'route') {
+      navigate(item.target);
+      setIsMenuOpen(false);
+    }
+  };
+
   return (
     <header
       className="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 shadow-sm"
@@ -53,30 +62,19 @@ const Header: React.FC = () => {
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => scrollToSection('home')}
-              className="text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => scrollToSection('services')}
-              className="text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors"
-            >
-              Services
-            </button>
-            <button
-              onClick={() => scrollToSection('about')}
-              className="text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors"
-            >
-              About
-            </button>
-            <button
-              onClick={() => scrollToSection('contact')}
-              className="btn-primary"
-            >
-              Contact
-            </button>
+            {config.navigation.menuItems.map((item) => (
+              <button
+                key={item.target}
+                onClick={() => handleMenuClick(item)}
+                className={
+                  item.isPrimary
+                    ? 'btn-primary'
+                    : 'text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors'
+                }
+              >
+                {item.label}
+              </button>
+            ))}
           </nav>
 
           <button
@@ -90,30 +88,19 @@ const Header: React.FC = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-4">
-              <button
-                onClick={() => scrollToSection('home')}
-                className="text-left text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors"
-              >
-                Home
-              </button>
-              <button
-                onClick={() => scrollToSection('services')}
-                className="text-left text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors"
-              >
-                Services
-              </button>
-              <button
-                onClick={() => scrollToSection('about')}
-                className="text-left text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors"
-              >
-                About
-              </button>
-              <button
-                onClick={() => scrollToSection('contact')}
-                className="btn-primary w-fit"
-              >
-                Contact
-              </button>
+              {config.navigation.menuItems.map((item) => (
+                <button
+                  key={item.target}
+                  onClick={() => handleMenuClick(item)}
+                  className={
+                    item.isPrimary
+                      ? 'btn-primary w-fit'
+                      : 'text-left text-[var(--text-dark)] hover:text-[var(--accent-color)] transition-colors'
+                  }
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           </div>
         )}

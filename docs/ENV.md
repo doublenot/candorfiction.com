@@ -70,6 +70,19 @@ The contact form supports two email services with automatic fallback. **Brevo is
 - **Usage**: Receives notification emails when users submit the contact form
 - **Example**: `"info@candorfiction.com"`
 
+### Instagram Integration
+
+#### `INSTAGRAM_ACCESS_TOKEN` (Optional)
+
+- **Type**: `string`
+- **Required**: No (for Instagram gallery functionality)
+- **Description**: Instagram Basic Display API access token for fetching user media
+- **Usage**: Authenticates requests to Instagram Basic Display API to fetch gallery images for the hero section
+- **Security**: Sensitive - store as encrypted secret in Cloudflare dashboard
+- **Requirements**: Must be a valid Instagram Basic Display API long-lived access token
+- **Example**: `"IGQVJYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"`
+- **Note**: If not provided, the gallery will use fallback images from the configuration
+
 ### Security Variables
 
 #### `CONTACT_FORM_SECRET`
@@ -126,6 +139,9 @@ wrangler secret put TO_EMAIL --env production
 wrangler secret put BREVO_API_KEY --env production    # Primary service
 wrangler secret put RESEND_API_KEY --env production   # Fallback service
 
+# Instagram integration (optional)
+wrangler secret put INSTAGRAM_ACCESS_TOKEN --env production
+
 # Security secret (always required)
 wrangler secret put CONTACT_FORM_SECRET --env production
 
@@ -134,6 +150,7 @@ wrangler secret put FROM_EMAIL --env staging
 wrangler secret put TO_EMAIL --env staging
 wrangler secret put BREVO_API_KEY --env staging
 wrangler secret put RESEND_API_KEY --env staging
+wrangler secret put INSTAGRAM_ACCESS_TOKEN --env staging
 wrangler secret put CONTACT_FORM_SECRET --env staging
 ```
 
@@ -222,7 +239,31 @@ The system checks email services in this order:
 3. System sends confirmation email to user's email address
 4. Both emails are sent from the configured sender address (`FROM_EMAIL`)
 
-## 🔍 Usage in Code
+## � Instagram Gallery Integration
+
+The hero section features an optional Instagram integration that displays live images from an Instagram account.
+
+### How It Works
+
+1. **API Endpoint**: Frontend calls `/api/images` to fetch Instagram images
+2. **Server-Side Processing**: Cloudflare Worker uses `INSTAGRAM_ACCESS_TOKEN` to call Instagram Basic Display API
+3. **Graceful Fallback**: If Instagram is unavailable, uses configured fallback images
+4. **Caching**: Images are cached to improve performance and reduce API calls
+
+### Instagram Configuration Options
+
+- **Instagram Enabled**: Configure `INSTAGRAM_ACCESS_TOKEN` for live Instagram images
+- **Fallback Only**: No token configured - uses static fallback images from `siteConfig.json`
+- **Hybrid Mode**: Instagram works when available, fallback when Instagram API is down
+
+### Instagram Setup Requirements
+
+1. **Instagram Basic Display App**: Create app in Facebook Developer Console
+2. **User Access Token**: Generate long-lived user access token
+3. **Public Account**: Instagram account should be public for best results
+4. **API Limits**: Respect Instagram's rate limits (200 requests per hour per user)
+
+## �🔍 Usage in Code
 
 ### TypeScript Interface
 
@@ -236,6 +277,7 @@ export interface Env {
   RESEND_API_KEY?: string; // Resend API authentication (optional)
   FROM_EMAIL: string; // Sender email address (used by all email services)
   TO_EMAIL: string; // Business email address (used by all email services)
+  INSTAGRAM_ACCESS_TOKEN?: string; // Instagram Basic Display API access token (optional)
   CONTACT_FORM_SECRET: string; // Security secret for HMAC verification (required)
 }
 ```
@@ -244,10 +286,13 @@ export interface Env {
 
 - **`src/worker.ts`**: Uses `ASSETS` for static file serving and `ENVIRONMENT` for logging
 - **`src/utils/handleContactForm.ts`**: Uses `ENVIRONMENT` for logging, `CONTACT_FORM_SECRET` for HMAC verification, and calls unified email service
+- **`src/utils/handleApiRoutes.ts`**: Routes API requests including the new `/api/images` endpoint
+- **`src/utils/handleImagesApi.ts`**: Uses `INSTAGRAM_ACCESS_TOKEN` to fetch Instagram images via Instagram Basic Display API
 - **`src/utils/sendEmail.ts`**: Manages email service selection (Brevo first, Resend fallback) using shared email addresses
 - **`src/utils/sendEmailViaBrevo.ts`**: Uses `BREVO_API_KEY` for authentication and shared `FROM_EMAIL`/`TO_EMAIL` for email functionality
 - **`src/utils/sendEmailViaResend.ts`**: Uses `RESEND_API_KEY` for authentication and shared `FROM_EMAIL`/`TO_EMAIL` for email functionality
 - **`src/utils/emailTemplates.ts`**: Provides shared email templates for both services
+- **`src/utils/apiImages.ts`**: Client-side utility for fetching images from the `/api/images` endpoint
 - **`src/utils/security.ts`**: Uses `CONTACT_FORM_SECRET` for server-side HMAC validation and origin checking
 
 ## ✅ Validation
@@ -275,6 +320,14 @@ if (env.RESEND_API_KEY) {
   // ... attempt Resend email
 }
 
+// Instagram integration validation
+if (env.INSTAGRAM_ACCESS_TOKEN) {
+  console.log('Instagram integration enabled');
+  // ... fetch Instagram images
+} else {
+  console.log('Instagram integration disabled - using fallback images');
+}
+
 // No email service configured
 console.warn(
   'No email service configured - neither Brevo nor Resend credentials found'
@@ -299,6 +352,10 @@ if (!env.CONTACT_FORM_SECRET) {
 
 - `wrangler.toml` - Environment configuration
 - `src/utils/types.ts` - TypeScript interfaces
+- `src/utils/handleApiRoutes.ts` - API route handling
+- `src/utils/handleImagesApi.ts` - Instagram API integration
+- `src/utils/apiImages.ts` - Client-side image fetching
 - `src/utils/sendEmailViaBrevo.ts` - Email integration
 - `src/utils/handleContactForm.ts` - Form processing
+- `src/config/siteConfig.json` - Site configuration including fallback images
 - `docs/CLOUDFLARE_DEPLOYMENT.md` - Deployment instructions
