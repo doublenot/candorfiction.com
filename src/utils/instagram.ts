@@ -22,6 +22,23 @@ interface InstagramResponse {
 }
 
 /**
+ * Format Instagram caption for use as alt text
+ * Removes hashtags and mentions, truncates to 100 characters
+ */
+function formatCaptionForAlt(caption?: string): string {
+  if (!caption) {
+    return 'Instagram image';
+  }
+
+  const formatted = caption
+    .substring(0, 100)
+    .replace(/[#@]\w+/g, '')
+    .trim();
+
+  return formatted || 'Instagram image';
+}
+
+/**
  * Fetch images from Instagram Basic Display API
  * Note: This requires a valid Instagram access token
  */
@@ -57,12 +74,7 @@ export async function fetchInstagramImages(
       .map((item) => ({
         id: item.id,
         src: item.media_url,
-        alt: item.caption
-          ? item.caption
-              .substring(0, 100)
-              .replace(/[#@]\w+/g, '')
-              .trim() || 'Instagram image'
-          : 'Instagram image',
+        alt: formatCaptionForAlt(item.caption),
         caption: item.caption,
       }));
 
