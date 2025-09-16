@@ -1,4 +1,5 @@
 import type { GalleryImage } from '../config/types';
+import { cache } from './cacheApi';
 
 interface InstagramMediaItem {
   id: string;
@@ -74,12 +75,11 @@ export async function fetchInstagramImages(
 }
 
 /**
- * Cache for Instagram images to avoid frequent API calls
+ * Cache for Instagram images using Cloudflare Cache API
  */
-class InstagramImageCache {
-  private cache: GalleryImage[] = [];
-  private lastFetch: number = 0;
+export class InstagramImageCache {
   private refreshInterval: number = 3600000; // 1 hour default
+  private namespace = 'instagram';
 
   constructor(refreshInterval?: number) {
     if (refreshInterval) {
@@ -87,30 +87,75 @@ class InstagramImageCache {
     }
   }
 
-  isExpired(): boolean {
-    return Date.now() - this.lastFetch > this.refreshInterval;
+  /**
+   * Generate a cache key for the request
+   */
+  private getCacheKey(accessToken: string, maxImages: number): string {
+    // Create a unique cache key based on access token hash and image count
+    // Use a simple hash to avoid storing the actual token in the cache key
+    const tokenHash =
+      accessToken.substring(0, 8) +
+      accessToken.substring(accessToken.length - 8);
+    return `images-${tokenHash}-${maxImages}`;
   }
 
   async getImages(
     accessToken: string,
     maxImages: number
   ): Promise<GalleryImage[]> {
-    if (this.cache.length === 0 || this.isExpired()) {
-      console.log('Refreshing Instagram image cache');
-      const freshImages = await fetchInstagramImages(accessToken, maxImages);
+    try {
+      const cacheKey = this.getCacheKey(accessToken, maxImages);
 
-      if (freshImages.length > 0) {
-        this.cache = freshImages;
-        this.lastFetch = Date.now();
+      // Use the cache utility's getOrSet method for clean cache-or-compute pattern
+      const images = await cache.getOrSet(
+        cacheKey,
+        () => fetchInstagramImages(accessToken, maxImages),
+        this.refreshInterval,
+        this.namespace
+      );
+
+      return images;
+    } catch (error) {
+      console.error('Instagram Cache API error:', error);
+
+      // Try to return stale cache data as fallback
+      try {
+        const cacheKey = this.getCacheKey(accessToken, maxImages);
+        const staleImages = await cache.get<GalleryImage[]>(
+          cacheKey,
+          this.namespace
+        );
+
+        if (staleImages && staleImages.length > 0) {
+          console.log(
+            'Instagram Cache API: Returning stale cache data as fallback'
+          );
+          return staleImages;
+        }
+      } catch (fallbackError) {
+        console.error('Failed to retrieve fallback cache data:', fallbackError);
       }
-    }
 
-    return this.cache;
+      return [];
+    }
   }
 
-  clearCache(): void {
-    this.cache = [];
-    this.lastFetch = 0;
+  async clearCache(accessToken?: string, maxImages?: number): Promise<void> {
+    try {
+      if (accessToken && maxImages) {
+        // Clear specific cache entry
+        const cacheKey = this.getCacheKey(accessToken, maxImages);
+        await cache.delete(cacheKey, this.namespace);
+      } else {
+        // Note: Cache API doesn't have a clear-all method for a namespace
+        // Individual cache entries will expire naturally based on TTL
+        console.log(
+          'Cache API: Individual cache entries will expire naturally'
+        );
+      }
+    } catch (error) {
+      console.error('Error clearing Instagram cache:', error);
+    }
   }
 }
 

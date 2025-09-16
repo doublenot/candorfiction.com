@@ -12,8 +12,13 @@ export {
   getBusinessEmailTemplate,
   getConfirmationEmailTemplate,
 } from './emailTemplates';
-export { fetchImagesFromApi, apiImageCache } from './apiImages';
-export { fetchInstagramImages, instagramCache } from './instagram';
+export {
+  fetchInstagramImages,
+  instagramCache,
+  InstagramImageCache,
+} from './instagram';
+export { cacheAPI, cache } from './cacheApi';
+export { useFetchImages } from './useFetchImages';
 export {
   generateNonce,
   generateHMAC,

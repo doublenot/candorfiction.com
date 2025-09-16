@@ -1,6 +1,9 @@
-import { fetchInstagramImages } from './instagram';
+import { InstagramImageCache } from './instagram';
 import { isValidOrigin } from './security';
 import type { Env } from './types';
+
+// Create a cache instance with 6-hour duration for server-side API
+const serverInstagramCache = new InstagramImageCache(21600000); // 6 hours in milliseconds
 
 /**
  * Handle /api/images endpoint - fetch Instagram images server-side
@@ -76,8 +79,8 @@ export async function handleImagesApi(
     const url = new URL(request.url);
     const maxImages = parseInt(url.searchParams.get('limit') || '6', 10);
 
-    // Fetch Instagram images
-    const images = await fetchInstagramImages(
+    // Use server-side Instagram cache with 6-hour duration
+    const images = await serverInstagramCache.getImages(
       env.INSTAGRAM_ACCESS_TOKEN,
       maxImages
     );
@@ -95,7 +98,7 @@ export async function handleImagesApi(
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': origin || '',
-          'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
+          'Cache-Control': 'public, max-age=21600', // Cache for 6 hours
         },
       }
     );
